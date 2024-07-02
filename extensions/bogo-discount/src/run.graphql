@@ -1,7 +1,36 @@
 query RunInput {
-  discountNode {
-    metafield(namespace: "$app:bogo-discount", key: "function-configuration") {
-      value
+  cart {
+    lines {
+      cost {
+        compareAtAmountPerQuantity {
+          amount
+        }
+        amountPerQuantity {
+          amount
+        }
+      }
+      merchandise {
+        __typename
+        ... on ProductVariant {
+          id
+          product {
+            id
+            hasAnyTag(tags: ["b1g1"])
+            # hasTags(tags: $selectedProductTags) {
+            #   hasTag
+            #   tag
+            # }
+          }
+        }
+      }
+      quantity
     }
   }
+
+  # discountNode {
+  #   metafield(namespace: "$app:bogo-discount", key: "function-configuration") {
+  #     value
+  #   }
+  # }
 }
+# ($selectedProductTags: [String!]!)

@@ -19,9 +19,72 @@ const EMPTY_DISCOUNT = {
  * @returns {FunctionRunResult}
  */
 export function run(input) {
-  const configuration = JSON.parse(
-    input?.discountNode?.metafield?.value ?? "{}"
+  // const configuration = JSON.parse(
+  //   input?.discountNode?.metafield?.value ?? "{}"
+  // );
+
+  const discounts = [];
+  const linesWithTag = [];
+
+  input.cart.lines.forEach((line) => {
+    if (
+      line.merchandise.__typename === "ProductVariant" &&
+      line.merchandise.product.hasAnyTag === true
+    ) {
+      linesWithTag.push({
+        id: line.merchandise.id,
+        quantity: line.quantity,
+        cost:
+          line.cost.compareAtAmountPerQuantity?.amount ||
+          line.cost.amountPerQuantity.amount,
+      });
+    }
+  });
+
+  // Calculate total quantity of all items with the "bogo" tag
+  const totalQuantity = linesWithTag.reduce(
+    (acc, line) => acc + line.quantity,
+    0
   );
 
-  return EMPTY_DISCOUNT;
-};
+  linesWithTag.sort((a, b) => a.cost - b.cost);
+
+  if (totalQuantity >= 2) {
+    let remainingFreeItems = Math.floor(totalQuantity / 2);
+
+    // Distribute the free items among the products
+    const targets = [];
+
+    for (let line of linesWithTag) {
+      if (remainingFreeItems <= 0) break;
+
+      const freeItemsForLine = Math.min(line.quantity, remainingFreeItems);
+      targets.push({
+        productVariant: {
+          id: line.id,
+          quantity: freeItemsForLine,
+        },
+      });
+      remainingFreeItems -= freeItemsForLine;
+    }
+
+    discounts.push({
+      targets: targets,
+      value: {
+        percentage: {
+          value: 100,
+        },
+      },
+      message: "BUY1GET1",
+    });
+  }
+
+  console.log(JSON.stringify(discounts, null, 20));
+
+  return discounts.length > 0
+    ? {
+        discountApplicationStrategy: DiscountApplicationStrategy.All,
+        discounts: discounts,
+      }
+    : EMPTY_DISCOUNT;
+}

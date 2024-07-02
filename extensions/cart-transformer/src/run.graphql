@@ -3,6 +3,25 @@ query RunInput {
     lines {
       id
       quantity
+      cost {
+        compareAtAmountPerQuantity {
+          amount
+        }
+        amountPerQuantity {
+          amount
+        }
+      }
+      merchandise {
+        __typename
+        ... on ProductVariant {
+          id
+          product {
+            id
+            hasAnyTag(tags: ["b1g1"])
+          }
+        }
+      }
+      quantity
     }
   }
 }
