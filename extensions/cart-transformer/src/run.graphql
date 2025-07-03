@@ -17,7 +17,7 @@ query RunInput {
           id
           product {
             id
-            hasAnyTag(tags: ["b1g1"])
+            hasAnyTag(tags: ["BUY1GET1"])
           }
         }
       }
