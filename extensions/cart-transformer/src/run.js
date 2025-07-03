@@ -66,7 +66,7 @@ export function run(input) {
 
   //   for (let line of linesWithTag) {
   //     if (remainingFreeItems <= 0) break;
-
+  
   //     const freeItemsForLine = Math.min(line.quantity, remainingFreeItems);
 
   //     operations.push({
@@ -81,39 +81,53 @@ export function run(input) {
   //         },
   //       },
   //     });
-
+  
   //     remainingFreeItems -= freeItemsForLine;
   //   }
   // }
-
+  
   if (totalQuantity >= 2) {
-    let remainingFreeItems = Math.floor(totalQuantity / 2);
-    let remainingPairs = remainingFreeItems;
-
-    for (let line of linesWithTag) {
-      if (remainingPairs <= 0) break;
-
-      const pairableItems = Math.min(line.quantity, remainingPairs * 2);
-
-      for (let i = 0; i < pairableItems / 2; i++) {
-        if (remainingPairs <= 0) break;
-
-        operations.push({
-          update: {
-            cartLineId: line.cartLineId,
-            price: {
-              adjustment: {
-                fixedPricePerUnit: {
-                  amount: line.cost,
-                },
+    // let remainingFreeItems = Math.floor(totalQuantity / 2);
+    // let remainingPairs = remainingFreeItems;
+    
+    // for (let line of linesWithTag) {
+    //   if (remainingPairs <= 0) break;
+      
+    //   const pairableItems = Math.min(line.quantity, remainingPairs * 2);
+      
+    //   for (let i = 0; i < pairableItems / 2; i++) {
+    //     if (remainingPairs <= 0) break;
+        
+    //     operations.push({
+    //       update: {
+    //         cartLineId: line.cartLineId,
+    //         price: {
+    //           adjustment: {
+    //             fixedPricePerUnit: {
+    //               amount: line.cost,
+    //             },
+    //           },
+    //         },
+    //       },
+    //     });
+        
+    //     remainingPairs--;
+    //   }
+    // }
+    linesWithTag.forEach((line) => {
+      operations.push({
+        update: {
+          cartLineId: line.cartLineId,
+          price: {
+            adjustment: {
+              fixedPricePerUnit: {
+                amount: line.cost,
               },
             },
           },
-        });
-
-        remainingPairs--;
-      }
-    }
+        },
+      });
+    });
   }
 
   console.log("***", JSON.stringify(operations, null, 20));
