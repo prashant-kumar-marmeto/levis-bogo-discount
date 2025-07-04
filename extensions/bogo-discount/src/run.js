@@ -22,7 +22,11 @@ export function run(input) {
   // const configuration = JSON.parse(
   //   input?.discountNode?.metafield?.value ?? "{}"
   // );
-
+  const customer = input.cart.buyerIdentity?.customer;
+  const customerEmail = customer?.email || "";
+  if (customerEmail.endsWith('@levi.com')){
+    return EMPTY_DISCOUNT
+  } else {
   const discounts = [];
   const linesWithTag = [];
 
@@ -80,6 +84,7 @@ export function run(input) {
   }
 
   console.log(JSON.stringify(discounts, null, 20));
+  console.log(customerEmail)
 
   return discounts.length > 0
     ? {
@@ -87,4 +92,5 @@ export function run(input) {
         discounts: discounts,
       }
     : EMPTY_DISCOUNT;
+  }
 }

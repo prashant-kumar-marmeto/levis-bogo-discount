@@ -1,5 +1,12 @@
 query RunInput {
   cart {
+    buyerIdentity {
+      email
+      customer {
+        id
+        email
+      }
+    }
     lines {
       id
       quantity

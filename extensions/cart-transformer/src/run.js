@@ -17,6 +17,13 @@ const NO_CHANGES = {
  * @returns {FunctionRunResult}
  */
 export function run(input) {
+  const customer = input.cart.buyerIdentity?.customer;
+  const customerEmail = customer?.email || "";
+  if (customerEmail.endsWith('@levi.com')){
+    return {
+      operations: [],
+    };
+  }
   const linesWithTag = [];
   const operations = [];
 
@@ -131,6 +138,7 @@ export function run(input) {
   }
 
   console.log("***", JSON.stringify(operations, null, 20));
+  console.log(customerEmail)
 
   return operations.length > 0 ? { operations: operations } : NO_CHANGES;
 }
