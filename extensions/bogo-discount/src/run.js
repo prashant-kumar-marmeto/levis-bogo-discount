@@ -19,78 +19,76 @@ const EMPTY_DISCOUNT = {
  * @returns {FunctionRunResult}
  */
 export function run(input) {
-  // const configuration = JSON.parse(
-  //   input?.discountNode?.metafield?.value ?? "{}"
-  // );
   const customer = input.cart.buyerIdentity?.customer;
   const customerEmail = customer?.email || "";
-  if (customerEmail.endsWith('@levi.com')){
-    return EMPTY_DISCOUNT
-  } else {
-  const discounts = [];
-  const linesWithTag = [];
+
+  if (customerEmail.endsWith("@levi.com")) {
+    return EMPTY_DISCOUNT;
+  }
+
+  const eligibleLines = [];
 
   input.cart.lines.forEach((line) => {
     if (
       line.merchandise.__typename === "ProductVariant" &&
       line.merchandise.product.hasAnyTag === true
     ) {
-      linesWithTag.push({
+      const price = parseFloat(line.cost.amountPerQuantity.amount);
+      const compareAt = parseFloat(
+        line.cost.compareAtAmountPerQuantity?.amount || price
+      );
+      const discountPercent = ((compareAt - price) / compareAt) * 100;
+
+      // Skip if already discounted 50% or more
+      if (discountPercent >= 50) return;
+
+      eligibleLines.push({
         id: line.merchandise.id,
         quantity: line.quantity,
-        cost:
-          line.cost.compareAtAmountPerQuantity?.amount ||
-          line.cost.amountPerQuantity.amount,
       });
     }
   });
 
-  // Calculate total quantity of all items with the "bogo" tag
-  const totalQuantity = linesWithTag.reduce(
-    (acc, line) => acc + line.quantity,
+  // Calculate total eligible quantity
+  const totalEligibleQty = eligibleLines.reduce(
+    (sum, line) => sum + line.quantity,
     0
   );
 
-  linesWithTag.sort((a, b) => a.cost - b.cost);
+  // Only apply discount to items in pairs (2, 4, 6...)
+  let discountQtyRemaining = Math.floor(totalEligibleQty / 2) * 2;
 
-  if (totalQuantity >= 2) {
-    let remainingFreeItems = Math.floor(totalQuantity / 2);
+  const discounts = [];
 
-    // Distribute the free items among the products
-    const targets = [];
+  for (const line of eligibleLines) {
+    if (discountQtyRemaining <= 0) break;
 
-    for (let line of linesWithTag) {
-      if (remainingFreeItems <= 0) break;
-
-      const freeItemsForLine = Math.min(line.quantity, remainingFreeItems);
-      targets.push({
-        productVariant: {
-          id: line.id,
-          quantity: freeItemsForLine,
-        },
-      });
-      remainingFreeItems -= freeItemsForLine;
-    }
+    const discountQty = Math.min(line.quantity, discountQtyRemaining);
 
     discounts.push({
-      targets: targets,
+      targets: [
+        {
+          productVariant: {
+            id: line.id,
+            quantity: discountQty,
+          },
+        },
+      ],
       value: {
         percentage: {
-          value: 99.99,
+          value: 50.0,
         },
       },
-      message: "BUY1GET1",
+      message: "Buy 2 Get 50% Off",
     });
-  }
 
-  console.log(JSON.stringify(discounts, null, 20));
-  console.log(customerEmail)
+    discountQtyRemaining -= discountQty;
+  }
 
   return discounts.length > 0
     ? {
         discountApplicationStrategy: DiscountApplicationStrategy.All,
-        discounts: discounts,
+        discounts,
       }
     : EMPTY_DISCOUNT;
-  }
 }
