@@ -42,16 +42,17 @@ export function run(input) {
       });
     }
   });
-
+  
   // Calculate total quantity of all items with the "bxgy" tag
   const totalQuantity = linesWithTag.reduce(
     (acc, line) => acc + line.quantity,
     0
   );
-
+  
   linesWithTag.sort((a, b) => a.cost - b.cost);
+  
   if (totalQuantity >= 2) {
-
+  
     linesWithTag.forEach((line) => {
       operations.push({
         update: {
@@ -67,9 +68,5 @@ export function run(input) {
       });
     });
   }
-
-  console.log("***", JSON.stringify(operations, null, 20));
-  console.log(customerEmail)
-
   return operations.length > 0 ? { operations: operations } : NO_CHANGES;
 }

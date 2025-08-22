@@ -27,21 +27,12 @@ export function run(input) {
   }
 
   const eligibleLines = [];
-
+  
   input.cart.lines.forEach((line) => {
     if (
       line.merchandise.__typename === "ProductVariant" &&
       line.merchandise.product.hasAnyTag === true
     ) {
-      const price = parseFloat(line.cost.amountPerQuantity.amount);
-      const compareAt = parseFloat(
-        line.cost.compareAtAmountPerQuantity?.amount || price
-      );
-      const discountPercent = ((compareAt - price) / compareAt) * 100;
-
-      // Skip if already discounted 50% or more
-      if (discountPercent >= 50) return;
-
       eligibleLines.push({
         id: line.merchandise.id,
         quantity: line.quantity,
@@ -54,36 +45,28 @@ export function run(input) {
     (sum, line) => sum + line.quantity,
     0
   );
-
-  // Only apply discount to items in pairs (2, 4, 6...)
-  let discountQtyRemaining = Math.floor(totalEligibleQty / 2) * 2;
-
-  const discounts = [];
-
-  for (const line of eligibleLines) {
-    if (discountQtyRemaining <= 0) break;
-
-    const discountQty = Math.min(line.quantity, discountQtyRemaining);
-
-    discounts.push({
-      targets: [
-        {
-          productVariant: {
-            id: line.id,
-            quantity: discountQty,
-          },
-        },
-      ],
-      value: {
-        percentage: {
-          value: 50.0,
+  
+  // Only apply discount if quantity is 2 or more (no need for pairs)
+  if (totalEligibleQty < 2) {
+    return EMPTY_DISCOUNT;
+  }
+  
+  const discounts = eligibleLines.map((line) => ({
+    targets: [
+      {
+        productVariant: {
+          id: line.id,
+          quantity: line.quantity,
         },
       },
-      message: "Buy 2 Get 50% Off",
-    });
-
-    discountQtyRemaining -= discountQty;
-  }
+    ],
+    value: {
+      percentage: {
+        value: 50.0,
+      },
+    },
+    message: "Buy 2 Get 50% Off",
+  }));
 
   return discounts.length > 0
     ? {
